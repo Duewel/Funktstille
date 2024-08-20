@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funkstille - CSV Uploader</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Funkstille</h1>
+        <h2>Upload your CSV file</h2>
+        <form class="upload-form">
+            <input type="file" id="fileElem" accept=".csv" onchange="handleFiles(this.files)">
+            <label class="button" for="fileElem">Select a file</label>
+        </form>
+        <button id="show-map-btn" class="button">Show Map</button>
+        <div id="result">
+            <h2>Result</h2>
+            <div id="text-data"></div>
+            <img id="plot-img" src="" alt="Plot Image">
+            <div id="map-container">
+                <img id="map-img" src="" alt="Map will be displayed here">
+            </div>
+        </div>
+    </div>
+    <script>
+        function handleFiles(files){
+            const formData = new FormData();
+            formData.append('file', files[0]);
+            
+            fetch('/upload', {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('plot-img').src = 'data:image/png;base64,' + data.plot;
+                    document.getElementById('plot-img').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        document.getElementById('show-map-btn').addEventListener('click', function() {
+            fetch('/show_map')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('map-img').src = data.map_url;
+                        document.getElementById('map-img').style.display = 'block';
+                    } else {
+                        alert('Error loading map.');
+                    }
+                });
+        });
+    </script>
+</body>
+</html>
