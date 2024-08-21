@@ -73,34 +73,39 @@ X_train_val, X_test, y_train_val, y_test = train_test_split(X_scaled, y, test_si
 # Cross-Validation vorbereiten
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-# Modell definieren
+# Modell definieren mit angepassten Hyperparametern
 def create_model(input_shape):
     model = Sequential()
     model.add(Input(shape=(input_shape,)))
     
-    # Adding layers based on best hyperparameters
+    # Layer 0
     model.add(Dense(units=128, activation='relu'))
     model.add(Dropout(rate=0.1))
     
+    # Layer 1
     model.add(Dense(units=224, activation='relu'))
     model.add(Dropout(rate=0.2))
     
+    # Layer 2
     model.add(Dense(units=32, activation='relu'))
     model.add(Dropout(rate=0.0))
     
+    # Layer 3
     model.add(Dense(units=32, activation='relu'))
     model.add(Dropout(rate=0.0))
     
+    # Layer 4
     model.add(Dense(units=32, activation='relu'))
     model.add(Dropout(rate=0.0))
     
     # Output layer
-    model.add(Dense(units=19, activation='softmax'))  # Replace num_classes with the number of classes in your problem
+    model.add(Dense(units=19, activation='softmax'))  # Passe die Anzahl der Klassen an dein Problem an
 
-    # Compiling the model with the best learning rate
+    # Compiling the model with the specified learning rate
     model.compile(optimizer=Adam(learning_rate=0.001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     
     return model
+
 
 # Cross-Validation ausführen
 fold_no = 1

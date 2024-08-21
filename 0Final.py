@@ -11,14 +11,14 @@ import pickle
 import os 
 
 
-# Beispiel-Daten initialisieren (ersetzen Sie dies durch Ihren tatsächlichen Pfad und Ihre Daten)
+# Beispiel-Daten initialisieren 
 test_path = "uploads/2024-07-04_09_04_11_my_iOS_device.csv"   #"new/D- Park.csv"
 data = pd.read_csv(test_path)
 
 
 actual_lats = data["locationLatitude(WGS84)"]
 actual_lons = data["locationLongitude(WGS84)"]
-# Initiale GPS-Position (ersetzen Sie dies durch Ihre tatsächliche Startposition)
+
 initial_position = (data["locationLatitude(WGS84)"].iloc[0], data["locationLongitude(WGS84)"].iloc[0])
 final_position = (data["locationLatitude(WGS84)"].iloc[-1], data["locationLongitude(WGS84)"].iloc[-1])
 
@@ -32,7 +32,7 @@ data["cumulated_angle_rad"] = np.cumsum(data["period_angle"])
 data["angle_degree"] = data["cumulated_angle_rad"] / np.pi * 180
 data["current_angle"] = initial_heading - data["angle_degree"]
 
-# Berechnung zukünftiger Winkel
+# Berechnung Winkel (etwas Zeitverschoben)
 data["future_time"] = data["time"] + 2
 data["future_angle"] = np.nan
 
@@ -42,7 +42,7 @@ significant_changes = data[np.abs(data["angle_change_per_sec"]) > 80]
 significant_times = significant_changes["time"].tolist()
 
 filtered_times = []
-threshold = 1  # 1 Sekunde Unterschied
+threshold = 1  
 
 for i in range(1, len(significant_times)):
     if significant_times[i] - significant_times[i-1] > threshold:
@@ -55,14 +55,14 @@ if significant_times:
 print(filtered_times)
 
 
-# Funktion zum filtern --> Berehcnen Schrittlänge und GEschwindigkeit: 
+# Funktion zum filtern --> Berehcnen Schrittlänge und Geschwindigkeit: 
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
 
-# Funktion zum Anwenden des Low-Pass-Filters auf Daten
+# Funktion: Anwenden des Low-Pass-Filters auf Daten
 def lowpass_filter(data, cutoff, fs, order=5):
     b, a = butter_lowpass(cutoff, fs, order=order)
     y = filtfilt(b, a, data)
@@ -82,7 +82,7 @@ def find_step_length():
 def winkel_angleichen(result_df):
     future_angle = result_df["future_angle"]
     for i, angle in enumerate(future_angle):
-        if pd.notna(angle):  # Überprüfen, ob der Winkel nicht NaN ist
+        if pd.notna(angle):  
             rest = angle % 90
             if rest > 50:
                 result_df.at[i, "future_angle"] = (angle // 90 + 1) * 90
@@ -91,9 +91,9 @@ def winkel_angleichen(result_df):
     return result_df
 
 
-# Sampling-Frequenz und Cutoff-Frequenz
-fs = 1 / data["accelerometerTimestamp_sinceReboot(s)"].diff().mean()  # Abtastrate berechnet aus Zeitdifferenzen
-cutoff = 5.0  # Cutoff-Frequenz in Hz, anpassen je nach Bedarf
+
+fs = 1 / data["accelerometerTimestamp_sinceReboot(s)"].diff().mean()  
+cutoff = 5.0  
 
 # Anwendung des Low-Pass-Filters auf die Beschleunigungsdaten
 data["accelX_filtered"] = lowpass_filter(data['accelerometerAccelerationX(G)'], cutoff, fs)
