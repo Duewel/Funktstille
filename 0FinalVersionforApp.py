@@ -37,7 +37,7 @@ data["cumulated_angle_rad"] = np.cumsum(data["period_angle"])
 data["angle_degree"] = data["cumulated_angle_rad"] / np.pi * 180
 data["current_angle"] = initial_heading - data["angle_degree"]
 
-# Berechnung zukünftiger Winkel
+# Berechnung zukünftiger Winke
 data["future_time"] = data["time"] + 2
 data["future_angle"] = np.nan
 
@@ -67,7 +67,7 @@ def butter_lowpass(cutoff, fs, order=5):
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
 
-# Funktion zum Anwenden des Low-Pass-Filters auf Daten
+
 def lowpass_filter(data, cutoff, fs, order=5):
     b, a = butter_lowpass(cutoff, fs, order=order)
     y = filtfilt(b, a, data)
@@ -96,51 +96,48 @@ def winkel_angleichen(result_df):
     return result_df
 
 
-# Sampling-Frequenz und Cutoff-Frequenz
-fs = 1 / data["accelerometerTimestamp_sinceReboot(s)"].diff().mean()  # Abtastrate berechnet aus Zeitdifferenzen
-cutoff = 5.0  # Cutoff-Frequenz in Hz, anpassen je nach Bedarf
+
+fs = 1 / data["accelerometerTimestamp_sinceReboot(s)"].diff().mean()  
+cutoff = 5.0  
 
 # Anwendung des Low-Pass-Filters auf die Beschleunigungsdaten
 data["accelX_filtered"] = lowpass_filter(data['accelerometerAccelerationX(G)'], cutoff, fs)
 data["accelY_filtered"] = lowpass_filter(data['accelerometerAccelerationY(G)'], cutoff, fs)
 data["accelZ_filtered"] = lowpass_filter(data['accelerometerAccelerationZ(G)'], cutoff, fs)
 
-# Berechnung der Magnitude des Beschleunigungsvektors
+
 data["accel_magnitude"] = np.sqrt(data["accelX_filtered"]**2 + data["accelY_filtered"]**2 + data["accelZ_filtered"]**2)
 
-# Schritt-Erkennung durch Identifikation von Spitzen
-peaks, _ = find_peaks(data["accel_magnitude"], height=1.1, distance=fs/2)  # Passen Sie die Parameter height und distance an
 
-# Anzahl der Schritte
+peaks, _ = find_peaks(data["accel_magnitude"], height=1.1, distance=fs/2)  
+
 num_steps = len(peaks)
 
 
-# Berechnung der Gesamtzeitdauer des Datensatzes
 total_time = data["accelerometerTimestamp_sinceReboot(s)"].iloc[-1] - data["accelerometerTimestamp_sinceReboot(s)"].iloc[0]
 
-# Schrittfrequenz berechnen
+
 step_frequency = num_steps / total_time  # Schritte pro Sekunde
 print(f'Frequenz: {step_frequency}')
 
-# Schrittlänge schätzen (beispielhaft, anpassen je nach Bedarf)
-average_stride_length = find_step_length() # Durchschnittliche Schrittlänge in Metern
 
-# Geschwindigkeit berechnen
+average_stride_length = find_step_length() 
+
+
 fixed_speed = step_frequency * average_stride_length  
 print(fixed_speed)
 
 
-# Annahme: Sie möchten um etwa 2 Sekunden verschieben
 time_shift_seconds = 2
 
-        # Zeitindex und Abtastfrequenz (falls vorhanden)
-time_index = data["time"]  # Zeitindex
+        
+time_index = data["time"]  
 sampling_rate = time_index.diff().mean()  # Annahme: Abtastfrequenz aus Zeitdifferenzen berechnen
 
-        # Berechnung der Anzahl von Zeilen für den Zeitversatz
+        
 rows_to_shift = int(time_shift_seconds / sampling_rate)
 
-        # Verschieben der Daten um die berechnete Anzahl von Zeilen
+        
 data["future_angle"] = data["current_angle"].shift(-rows_to_shift).fillna(np.nan)
 
 # Positionen berechnen
@@ -156,18 +153,18 @@ for index, row in data.iterrows():
 
     current_angle = initial_heading - period_angle
     
-    # Berechnung der Distanz, die zurückgelegt wurde
+    
     distance = fixed_speed * delta_time
 
-    # Berechnung der neuen Position basierend auf dem aktuellen Winkel und der Distanz
+
     current_position = geodesic(meters=distance).destination(current_position, current_angle)
     positions.append(current_position)
     angles.append(current_angle)
 
-# Extrahieren der Latitude und Longitude für das Plotten
+
 lats, lons = zip(*positions)
 
-# Define the coordinates for each area
+
 areas = {
     'additional_1': {'latitude': [53.2295966, 53.2295037], 'longitude': [10.4053239, 10.4053357]},
     'additional_2': {'latitude': [53.2295037, 53.2294835], 'longitude': [10.4053357, 10.4050846]},
@@ -199,19 +196,19 @@ areas = {
 
 
 
-# Funktion zum Finden der durchlaufenen Punkte und Zeiten
+
 def find_nearest_points_with_time(data, allLat, allLong, angles):
     # Eckpunkte des Parcours
     corners = list(zip(allLat, allLong))
     
-    # Spalten für die Ergebnisse
+   
     nearest_points = []
     distances = []
     times = []
     current_angles = []
     future_angles = []
 
-    # Durchlauf durch die GPS-Positionen und Zeitstempel
+   
     for corner in corners:
         min_distance = float('inf')
         nearest_time = None
@@ -224,14 +221,14 @@ def find_nearest_points_with_time(data, allLat, allLong, angles):
                 nearest_time = time
                 nearest_index = i
 
-        if min_distance < 5:  # Schwellenwert für signifikante Nähe (z.B. 5 Meter)
+        if min_distance < 5:  
             nearest_points.append(corner)
             distances.append(min_distance)
             times.append(nearest_time)
             current_angles.append(data.loc[nearest_index, "current_angle"])
             future_angles.append(data.loc[nearest_index, "future_angle"])
 
-    # Erstellen eines DataFrames mit den Ergebnissen
+    
     results = pd.DataFrame({
         'latitude': [point[0] for point in nearest_points],
         'longitude': [point[1] for point in nearest_points],
@@ -256,14 +253,14 @@ def calculate_future_angles(data, filtered_times):
     delta_times = []
 
 
-    # Initialer Zeitpunkt 0 hinzufügen
+  
     filtered_times.insert(0, 0)
 
-    # Endzeitpunkt hinzufügen
+  
     filtered_times.append(data["time"].max())
 
     for time in filtered_times:
-        # Holen des zukünftigen Winkels aus der Spalte "future_angle" zur gegebenen Zeit
+        
         future_angle = data.loc[data["time"] == time, "future_angle"].values
         if len(future_angle) > 0:
             future_angle = future_angle[0]
@@ -289,7 +286,7 @@ results2 =calculate_future_angles(data, filtered_times)
 allLat = [53.2295966, 53.2295037, 53.2294835, 53.2294804, 53.2296053, 53.2298517, 53.2298470, 53.2297627, 53.2295982, 53.2294744, 53.2293866, 53.2293154, 53.2293119, 53.2294001, 53.2294155, 53.2294238, 53.2293211, 53.2296167, 53.2297696]
 allLong = [10.4053239, 10.4053357, 10.4050846, 10.4048623, 10.4048372, 10.4047826, 10.4046903, 10.4046940, 10.4047287, 10.4047508, 10.4047560, 10.4048099, 10.4048889, 10.4048764, 10.4051001, 10.4053372, 10.4050829, 10.4050307, 10.4046194]
 
-# Finden der nächstgelegenen Punkte und Zeiten
+
 results = find_nearest_points_with_time(data, allLat, allLong, angles)
 
 def find_nearest_point(lat, lon, allLat, allLong):
@@ -314,17 +311,17 @@ for i in range(1, len(results2)):
     delta_time = results2['delta_time'][i]
     future_direction = results2['future_angle'][i-1]
     
-    # Berechnung der zurückgelegten Strecke in diesem Zeitintervall in Metern
+    
     distance = fixed_speed * delta_time
     
-    # Umwandlung der Richtung von Grad in Bogenmaß
+    
     direction_rad = np.deg2rad(future_direction)
     
     # Berechnung der Verschiebung in Metern
     delta_lat = distance * np.cos(direction_rad)
     delta_lon = distance * np.sin(direction_rad)
     
-    # Berechnung der neuen Position unter Verwendung der geopy-Bibliothek
+    
     prev_lat, prev_lon = positions[-1]
     new_position = geodesic(meters=distance).destination((prev_lat, prev_lon), np.rad2deg(direction_rad))
     #Debug 
@@ -342,17 +339,17 @@ def predict_trajectory(test_file, model, scaler, label_encoder):
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.fillna(0, inplace=True)
 
-    # Start with the first corrected position
+    # erste korrigierte position
     current_lat = 53.2295966
     current_long = 10.4053239
-    predicted_positions = [(current_lat, current_long)]  # Include the start point in the predicted positions
+    predicted_positions = [(current_lat, current_long)]  
 
-    # Go through each row in the file
+    
     for i in range(len(df) - 1):
         future_angle = df['future_angle'][i]
-        delta_time = df['delta_time'][i + 1]  # Take the Delta time to the next point
+        delta_time = df['delta_time'][i + 1]  
 
-        # Scale the features for the model
+        
         features = np.array([[current_lat, current_long, future_angle, delta_time]])
         features_scaled = scaler.transform(features)
 
@@ -367,13 +364,13 @@ def predict_trajectory(test_file, model, scaler, label_encoder):
         print(f"Predicted: ({predicted_lat}, {predicted_long})")
     
     
-    # The actual path and the last predicted position
+    
     
     final_predicted_position = predicted_positions[-1]
     
     return predicted_positions, final_predicted_position
 
-# Load the model and other resources
+
 model = load_model('final_model.h5')
 with open('scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
@@ -384,7 +381,7 @@ with open('label_encoder.pkl', 'rb') as f:
 # predicted postions MLP
 predicted_positions, final_predicted_position = predict_trajectory(results2, model, scaler, label_encoder)
 
-#Vergleich echt und geschätzt
+#
 geschätzt_endposition_berechnet = positions[-1]
 print(f'Endposition berechnet: {geschätzt_endposition_berechnet}')
 echte_endposition_korrigiert = find_nearest_point(final_position[0], final_position[1], allLat, allLong)
@@ -396,13 +393,13 @@ else:
     print("Klassifizierung FALSCH")
     
 
-# Extrahieren von Breiten- und Längengraden für die Darstellung des Pfads
+
 path_lats, path_lons = zip(*positions)
 
 
 
 
-# Ausgabe der Ergebnisse
+
 print(results)
 
 
@@ -412,7 +409,7 @@ def plot_areas(ax):
         longitudes = coords['longitude']
         ax.plot(longitudes, latitudes, color='black', linewidth=3, marker='o')
 
-# Funktion zur Überprüfung der Klassifizierung
+
 def is_classification_correct(predicted_position, true_position):
     return predicted_position == true_position
 
@@ -430,7 +427,7 @@ classification_jeder_datenpunkt = is_classification_correct(predicted_end_pos_je
 classification_nur_eckpunkte = is_classification_correct(predicted_end_pos_nur_eckpunkte, echte_endposition_korrigiert)
 classification_nn = is_classification_correct(predicted_end_pos_nn, echte_endposition_korrigiert)
 
-# Plot each area as a line segment and annotate points
+
 for i, ax in enumerate(axes.flat):
     plot_areas(ax)
     if i == 0:

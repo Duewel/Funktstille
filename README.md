@@ -35,3 +35,7 @@ pip install tensorflow scikit-learn pandas geopy matplotlib scipy flask werkzeug
 ```python
 pip3 install tensorflow scikit-learn pandas geopy matplotlib scipy flask werkzeug
 ```
+
+## Use of AI-assistants
+
+AI technology (ChatGPT by OpenAI) was utilized in the development process to enhance the functionality and capabilities of the project.

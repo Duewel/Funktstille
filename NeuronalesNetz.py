@@ -13,7 +13,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.pyplot as plt
 import seaborn as sns
-# Funktion zum Laden der CSV-Dateien und Extrahieren der Features und Labels
+
 def load_data_from_csv(folder_path):
     data = []
     for file in os.listdir(folder_path):
@@ -35,22 +35,22 @@ def load_data_from_csv(folder_path):
     columns = ['initial_lat', 'initial_long', 'future_angle', 'delta_time', 'end_lat', 'end_long']
     return pd.DataFrame(data, columns=columns)
 
-# Pfad zu den CSV-Dateien
-folder_path = 'outputcsv'  # specify the correct path
+
+folder_path = 'outputcsv'  
 df = load_data_from_csv(folder_path)
 
-# Kombiniere end_lat und end_long zu einer einzigen Klassenbezeichnung
+
 df['end_position'] = df[['end_lat', 'end_long']].apply(lambda row: f"{row['end_lat']}_{row['end_long']}", axis=1)
 
-# Klassenbezeichnungen kodieren
+
 label_encoder = LabelEncoder()
 df['end_position_label'] = label_encoder.fit_transform(df['end_position'])
 
-# Features und Labels auswählen
+
 X = df[['initial_lat', 'initial_long', 'future_angle', 'delta_time']]
 y = df['end_position_label']
 
-# Features normalisieren
+
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
@@ -61,13 +61,13 @@ with open('scaler.pkl', 'wb') as f:
 with open('label_encoder.pkl', 'wb') as f:
     pickle.dump(label_encoder, f)
 
-# Konvertiere X_scaled und y in numpy-Arrays
+
 X_scaled = np.array(X_scaled)
 y = np.array(y)
 
 print(len(X_scaled))
 
-# Daten aufteilen
+
 X_train_val, X_test, y_train_val, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
 # Cross-Validation vorbereiten

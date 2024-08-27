@@ -319,7 +319,7 @@ for i in range(1, len(results2)):
     delta_lat = distance * np.cos(direction_rad)
     delta_lon = distance * np.sin(direction_rad)
     
-    # Berechnung der neuen Position unter Verwendung der geopy-Bibliothek
+    
     prev_lat, prev_lon = positions[-1]
     new_position = geodesic(meters=distance).destination((prev_lat, prev_lon), np.rad2deg(direction_rad))
     #Debug 
@@ -337,32 +337,32 @@ def predict_trajectory(test_file, model, scaler, label_encoder):
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.fillna(0, inplace=True)
 
-    # Start with the first corrected position
+    # Erste korrigierte Position
     current_lat = 53.2295966
     current_long = 10.4053239
-    predicted_positions = [(current_lat, current_long)]  # Include the start point in the predicted positions
+    predicted_positions = [(current_lat, current_long)]  
 
-    # Go through each row in the file
+    
     for i in range(len(df) - 1):
         future_angle = df['future_angle'][i]
-        delta_time = df['delta_time'][i + 1]  # Take the Delta time to the next point
+        delta_time = df['delta_time'][i + 1]  
 
-        # Scale the features for the model
+       
         features = np.array([[current_lat, current_long, future_angle, delta_time]])
         features_scaled = scaler.transform(features)
 
-        # Predict the next position
+        
         predicted_index = np.argmax(model.predict(features_scaled), axis=1)
         predicted_lat_long = label_encoder.inverse_transform(predicted_index)[0]
         predicted_lat, predicted_long = map(float, predicted_lat_long.split('_'))
         
-        # Update the current position for the next iteration
+        
         current_lat, current_long = predicted_lat, predicted_long
         predicted_positions.append((predicted_lat, predicted_long))
         print(f"Predicted: ({predicted_lat}, {predicted_long})")
     
     
-    # The actual path and the last predicted position
+  
     
     final_predicted_position = predicted_positions[-1]
     
@@ -391,13 +391,13 @@ else:
     print("Klassifizierung FALSCH")
     
 
-# Extrahieren von Breiten- und Längengraden für die Darstellung des Pfads
+
 path_lats, path_lons = zip(*positions)
 
 
 
 
-# Ausgabe der Ergebnisse
+
 print(results)
 
 """
@@ -472,7 +472,7 @@ def plot_areas(ax):
 def is_classification_correct(predicted_position, true_position):
     return predicted_position == true_position
 
-# Plot each prediction path in a separate graph
+
 fig, axes = plt.subplots(2, 2, figsize=(20, 20))
 
 predicted_lats_MLP, predicted_longs_MLP = zip(*predicted_positions)
@@ -481,12 +481,12 @@ predicted_end_pos_jeder_datenpunkt = find_nearest_point(lats[-1],lons[-1],allLat
 predicted_end_pos_nur_eckpunkte = find_nearest_point( path_lats[-1],path_lons[-1],allLat,allLong)
 predicted_end_pos_nn = find_nearest_point( predicted_lats_MLP[-1],predicted_longs_MLP[-1],allLat,allLong)
 
-# Überprüfung der Klassifizierungen
+# richtige Klassifizierung? 
 classification_jeder_datenpunkt = is_classification_correct(predicted_end_pos_jeder_datenpunkt, echte_endposition_korrigiert)
 classification_nur_eckpunkte = is_classification_correct(predicted_end_pos_nur_eckpunkte, echte_endposition_korrigiert)
 classification_nn = is_classification_correct(predicted_end_pos_nn, echte_endposition_korrigiert)
 
-# Plot each area as a line segment and annotate points
+# Plot 
 for i, ax in enumerate(axes.flat):
     plot_areas(ax)
     if i == 0:
